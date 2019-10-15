@@ -3,6 +3,7 @@ package com.cg.ibs.investment.dao;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -61,6 +62,7 @@ public class InvestmentDaoImpl implements BankDao, ClientDao {
 		mutualFundscust3.add(new MutualFund(10003, "IBS Smart Plan", 600, 50, dt1, null, true));
 		mutualFundscust4.add(new MutualFund(10003, "IBS Smart Plan", 600, 50, dt1, null, true));
 		mutualFundscust5.add(new MutualFund(10003, "IBS Smart Plan", 600, 50, dt1, null, true));
+		
 
 		TransactionBean trxn1 = new TransactionBean(new BigInteger("100100100"), TransactionType.CREDIT, dt1,
 				new BigDecimal("2000"));
