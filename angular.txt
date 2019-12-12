@@ -1,0 +1,20 @@
+1. component= @component
+2. directives = @directive
+3. pipes = @pipe
+4. services= @injectable
+5. modules = @ngmodule        -- similar to packages.logically group and resolves naming confict.always inside one root module.one module inside another and are called feature module. 
+
+these are the decorative(@...) and the data they contain are called metadata.
+
+. code .  = to triger the visual studio.
+. npm= node package manager. just like maven.
+. package.json=just like pom.xml
+. node_modules contains all the dependencies.
+. npm install = to install the node_module folder.
+. angular.json = properties.
+. main.tes= same as main method in java inside a src folder.
+ng serve --port 9999 -o
+. data binding-to bind the variable or components with your template.
+. class can have one constructor only. wheather it is paramiterized or not. doesnot matter.
+. datamember cannot be accessable without this keyword.
+. 

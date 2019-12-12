@@ -1,0 +1,61 @@
+collection-> have a bank empl has to keep the track of task. to storethiswhat will be the appro collection type. ANY LIST IMPLEMENTATION WILL WORK.
+
+TOP CLASS MEANS WHICH IS MAYBE INHERITED TO ANY OTHER CLASS. 
+QUE 2. which keyword cannot be applied on the top level class-PRIVATE,STATIC.
+static means only one copy.
+
+overriding.
+que3. when i write a method as public. den can i write private to overriden method.
+no. public cannot be private.
+
+que4a func returning the bank account. can the same function when override return the  java lang object. ANS-
+
+QUE5. METHOD M1 IN CLASS A. METHOD HAS PARAMETER OF STRING, LONG. HAVE CLASS B COMING FROM A WHICH HAS A METHOD M1 WITH PARAMETER STRING,INT. 
+what it is. overriden or overload.ANS OVERLOAD.
+
+QUE6. HAVE TO PARARMETERIZED CONSTRUCTERS FROM THE DEFAULT CONSTRUCTOR IN THE SAME CLASS. ANS-THIS.
+QUE7. 
+QUE8. 	CLASS TEST{
+	P S V MAIN(STRING ...A){
+	SOP(A.LENGTH);
+}} ans.0
+... MEANS VARIABLE LENGTH ARGUMENT
+
+QUE9.A EMPLYEE CLASS HAS A MANY TO ONE RELATION WITH CERTIFICATES. WHAT COLLETION U SUGGEST.? ANS-set (certificate no duplicate values.)
+
+QUE10. TRY{
+	THROW NEW RUNTIMEECXEPTION(".....");
+	}
+	CATCH(eXCEPTION E){
+	}
+	CATCH(RUNTIMEeXCEPTION E){
+	}
+	ANS=unreachable code.
+
+QUE11. 	STRING S="HELLO";
+	String s2=mew String("hello");
+	if(((object).s1).equals((object).s2){
+	sop-A;}
+	else{
+	sop-B;}
+	ANS-sop-a  will be executed.
+
+QUE12. STRING S="HELLO";
+	String s2=mew String("hello");
+	SET ST1 = NEW tREESET();
+	SET ST2 = NEW HASHSET();
+	ST1.ADD(S1); ST1.ADD(S2);
+	ST2.ADD(S1); ST2.ADD(S2);
+	ans- 1 each. length
+
+how duration and period is different
+QUE13. TWO DIFFERENT VARIABLES OF DATE. WANT TO FIND THE DIFF IN YEARS. WHAT WILL BE THE BEST CLASS 'PERIOD' OR 'DURATION'
+	ans-period. bcz it covers time very specifically. period has localdate and duration has localdatetime.
+
+QUE14.WHAT IS THE PARAMETER IN REDUCE FUNCTION IN STREAM CLASS -
+	ans-
+
+que15- read about supplier, consumer, function in lambda expression.
+ 	(obj)->{   } this is consuumer
+	()-> obj this is a supplier
+	()-> true predicate returns boolean.

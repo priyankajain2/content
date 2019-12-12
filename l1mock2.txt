@@ -1,0 +1,71 @@
+que1 FROM THE CLASS, NAME ONE FUNCTION WHICH SUITS THEDEFINITION OF A CONSUMER (LAMBDAEXPRESSION)
+ans-print,println.
+
+que2 a class caled test which has MAIN and has thread.curentthred.threadname.
+ans-main
+
+que3 class that conatins the thread the custon thread is already inherited .
+ans- implemets runnable()
+
+que4 synchronized on a method. what is going to be locked.
+ans- current instance. paralley accessible other instances
+
+que5 difference in synchronized block and synchronized method. when to use what.
+ans-
+
+que6 normal forms 
+which of the normal form recemends to eliminate transitive depencency
+ans- form 3
+
+que7 two tables. books and authors assume one book is written by one author. common column is only one. i want all authors no matter if the book is written by him and only those books whose authorId is mentioned. 
+ans- selelct b.bookname, a.authorname from  book b rightouterjoin 
+
+que8 same tables. want to retrive all those books those auhor name start with letter a.
+ans select bookname from book join a.authod on book.id=author.id where author.name like 
+
+que9 want author name and his first publised date
+ans select a.authorname , min of b.date from author a innerjoin book b on a.authorid=b.bookid groupby a.authorname
+
+que10 want the title of the book and how old the book is in years.
+ans select title from books where (productiondate-sisDate)/365
+
+que11 jdbc rs.next()
+
+que12 which class/interface to use to retrive the information of the current using database. 
+ans database metadata
+
+que13 connection
+statement 
+scanner enter any query. 
+string qry = scan.next
+how to retrive the columns NAME from the dynamically exceuted query.
+ANS- resultset metadata. everything can be retrive rs.getMetaData.
+
+que14. execute, exceuteupdate, execute 
+its input and output.
+
+que15 to validate number- use pattern in html. reg-ex
+ validation tags in html. 
+what is wrong in code. where we have <p> in which we have <div> inside p. ANS-P CANNOT HAVE ANYTHING OTHERTHEN TEXT. ONLY SINGLE LINE SENTENCE.
+
+QUE 16 CSS-SELECTORS. STYLEROUTE SAYING (TABLE.PRICES TD.CURRENCY{ TEXT-ALIGN="RIGHT"})
+APPLIES ON CURRENCY WHERE TABLE CLASS IS PRICE 
+
+QUE17. TABLE.PRICE>TD.CURRENCY 
+ANS- 
+
+QUE18 HW TO CREATE a row with three columns OF EQUAL SIZE WHERE THEY ARE REACTIVE.
+IN BOOTSTRAP. <div class ="row">
+		<div class = col></div>
+ 		<div class = col></div>
+		<div class = col></div>
+	      </div>
+que19 bootstrap 4 grid-system.
+
+que20. what class to use if  ans-text-center, text-right
+if i ahve to add 4 emuns of padding. 
+
+que21. servelts.do post do-get
+@webservelte "/abc"
+public class myservlet extends servlet
+rbsp.

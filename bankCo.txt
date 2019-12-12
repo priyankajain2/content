@@ -1,0 +1,229 @@
+package com.cg.dw.controller;
+
+import java.math.BigInteger;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.cg.dw.exception.IBSException;
+import com.cg.dw.model.CaseIdBean;
+import com.cg.dw.model.CreditCardTransaction;
+import com.cg.dw.model.DebitCardTransaction;
+import com.cg.dw.service.BankService;
+
+@Controller
+@Scope("session")
+@RequestMapping("/banker")
+public class BankController {
+	DateTimeFormatter dtFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+	String serviceRequest;
+	String serviceRequest1;
+	String output = "";
+	@Autowired
+	private BankService bankService;
+
+	@RequestMapping("/bankMenu")
+	public String showMenu() {
+		return "bankMenuPage";
+	}
+
+	@RequestMapping("/insideBankMenu")
+	public String showinsideMenu() {
+		return "bankInsideMenuPage";
+	}
+
+	@RequestMapping("/listsr")
+	public String showServieRequests() {
+		return "bankMenuFunctionsPage";
+	}
+
+	@RequestMapping("/banksubmenu")
+	public String showFunctions() {
+		return "bankSubMenu";
+	}
+
+	@RequestMapping(value = "/newdebit", method = RequestMethod.GET)
+	public ModelAndView listNewDebitQueries() {
+		List<CaseIdBean> caseBeans;
+		DateTimeFormatter dtFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+		try {
+			caseBeans = bankService.viewNewDebitQueries();
+		} catch (IBSException e) {
+			String message = e.getMessage();
+			return new ModelAndView("errorPage", "errorMessage", message);
+		}
+		ModelAndView mv = new ModelAndView("listnewDebitQueries", "output", caseBeans);
+		mv.addObject("dtF", dtFormat);
+		return mv;
+	}
+
+	@RequestMapping("/replyQueries")
+	public ModelAndView replyQueries(@RequestParam("serviceRequest") String serviceRequest1) {
+		this.serviceRequest = serviceRequest1;
+		return new ModelAndView("replyQueryPage");
+	}
+
+	@RequestMapping("/debitmismatch")
+	public ModelAndView debitMismatch() {
+		List<CaseIdBean> caseBeans = null;
+		try {
+			caseBeans = bankService.viewDebitMismatchQueries();
+			ModelAndView mv = new ModelAndView("displayMismatchPage", "output", caseBeans);
+			mv.addObject("dtF", dtFormat);
+			return mv;
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping("/creditmismatch")
+	public ModelAndView creditMismatch() {
+		List<CaseIdBean> caseBeans = null;
+		try {
+			caseBeans = bankService.viewCreditMismatchQueries();
+			ModelAndView mv = new ModelAndView("displayMismatchPage", "output", caseBeans);
+			mv.addObject("dtF", dtFormat);
+			return mv;
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping("/replyQueriesMismatch")
+	public ModelAndView replyQueriesMismatch(@RequestParam("serviceRequest") String serviceRequest1) {
+		this.serviceRequest = serviceRequest1;
+		BigInteger mismatchTransactionId = null;
+		DebitCardTransaction debitCardBeanTrns;
+		List<CreditCardTransaction> creditCardBeanTrns;
+		if (serviceRequest1.contains("RDMT")) {
+			try {
+				mismatchTransactionId = bankService.getDebitTransactionId(serviceRequest1);
+				System.out.println(mismatchTransactionId);
+				debitCardBeanTrns = bankService.getDebitMismatchTransaction(mismatchTransactionId);
+				System.out.println(mismatchTransactionId);
+				System.out.println(debitCardBeanTrns);
+
+				ModelAndView mv = new ModelAndView("debitMismatchPage", "d", debitCardBeanTrns);
+
+				mv.addObject("dtF", dtFormat);
+				return mv;
+
+			} catch (IBSException e) {
+				output = e.getMessage();
+				return new ModelAndView("errorPage", "output", output);
+
+			}
+		} else if (serviceRequest1.contains("RCMT")) {
+			try {
+				mismatchTransactionId = bankService.getCreditTransactionId(serviceRequest1);
+				System.out.println(mismatchTransactionId);
+				creditCardBeanTrns = bankService.getCreditMismatchTransaction(mismatchTransactionId);
+				System.out.println(creditCardBeanTrns);
+				ModelAndView mv = new ModelAndView("creditMismatchPage", "d", creditCardBeanTrns);
+				mv.addObject("dtF", dtFormat);
+				return mv;
+
+			} catch (IBSException e) {
+				output = e.getMessage();
+				return new ModelAndView("errorPage", "output", output);
+			}
+		} else {
+			output = "Internal Error";
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping("/mismatchDebitBlock")
+	public ModelAndView replyQueriesDebit(@RequestParam("cardNum") BigInteger debitCardNumber) {
+		try {
+			
+			bankService.blockDebit(debitCardNumber);
+		
+			output = "You card has been blocked successfully.";
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+		return new ModelAndView("outputBankPage", "output", output);
+	}
+
+	@RequestMapping("/mismatchCreditBlock")
+	public ModelAndView replyQueriesCredit(@RequestParam("cardNum") BigInteger creditCardNumber) {
+		try{
+			bankService.blockCredit(creditCardNumber);	
+			output = "You card has been blocked successfully.";
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+		return new ModelAndView("outputBankPage", "output", output);
+	}
+
+	@RequestMapping(value = "/replyQueries1", method = RequestMethod.POST)
+	public ModelAndView replyQueries(@RequestParam("status") String status, @RequestParam("remarks") String remarks) {
+		serviceRequest1 = this.serviceRequest;
+
+		try {
+			bankService.setQueryStatus(serviceRequest1, status, remarks);
+			output = "Replied successfully to the query";
+			return new ModelAndView("outputBankPage", "output", output);
+
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/newcredit", method = RequestMethod.GET)
+	public ModelAndView listNewCreditQueries() {
+		List<CaseIdBean> caseBeans;
+
+		try {
+			caseBeans = bankService.viewNewCreditQueries();
+		} catch (IBSException e) {
+			String message = e.getMessage();
+			return new ModelAndView("errorPage", "errorMessage", message);
+		}
+		ModelAndView mv = new ModelAndView("listNewCreditQueries", "output", caseBeans);
+		mv.addObject("dtF", dtFormat);
+		return mv;
+	}
+
+	@RequestMapping(value = "/upgradedebit", method = RequestMethod.GET)
+	public ModelAndView listNewUpgradeDebitQueries() {
+		List<CaseIdBean> caseBeans;
+		try {
+			caseBeans = bankService.viewDebitUpgradeQueries();
+		} catch (IBSException e) {
+			String message = e.getMessage();
+			return new ModelAndView("errorPage", "errorMessage", message);
+		}
+		ModelAndView mv = new ModelAndView("serviceRequests", "output", caseBeans);
+		mv.addObject("dtF", dtFormat);
+		return mv;
+	}
+
+	@RequestMapping(value = "/upgradecredit", method = RequestMethod.GET)
+	public ModelAndView listNewUpgradeCreditQueries() {
+		List<CaseIdBean> caseBeans;
+		try {
+			caseBeans = bankService.viewCreditUgradeQueries();
+		} catch (IBSException e) {
+			String message = e.getMessage();
+			return new ModelAndView("errorPage", "errorMessage", message);
+		}
+		ModelAndView mv = new ModelAndView("serviceRequests", "output", caseBeans);
+		mv.addObject("dtF", dtFormat);
+		return mv;
+	}
+
+}

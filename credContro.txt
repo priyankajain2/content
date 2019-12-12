@@ -1,0 +1,370 @@
+package com.cg.dw.controller;
+
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.cg.dw.exception.IBSException;
+import com.cg.dw.model.CreditCardBean;
+import com.cg.dw.model.CreditCardTransaction;
+import com.cg.dw.service.CreditCustomer;
+import com.cg.dw.service.CreditCustomerVerification;
+
+@Controller
+@Scope("session")
+@RequestMapping("/credit")
+public class CreditCardController {
+
+	DateTimeFormatter dtFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+	BigInteger cardNumber;
+	BigInteger creditCard;
+	@Autowired
+	private CreditCustomer creditService;
+	@Autowired
+	private CreditCustomerVerification creditVerify;
+	List<CreditCardTransaction> trans;
+	CreditCardBean creditBean = new CreditCardBean();
+
+	@RequestMapping("/carddisplaymenu")
+	public ModelAndView showCardsMenu(@RequestParam("creditCards") BigInteger creditCard) {
+		this.cardNumber = creditCard;
+		try {
+			creditBean = creditService.fetchCreditdetails(creditCard);
+		} catch (IBSException e) {
+		}
+		return new ModelAndView("creditCardDetailsPage", "db", creditBean);
+	}
+
+	@RequestMapping("/cardMainMenu")
+	public String showMenu() {
+		return "cardsMenuPage";
+	}
+
+	@RequestMapping("/creditCardsSubMenu")
+	public String showCardMenu() {
+		return "creditCardsSubMenuPage";
+	}
+
+	@RequestMapping("/newcreditcard")
+	public ModelAndView applyNewCreditCard() {
+		String output = "";
+		boolean check = false;
+		try {
+			check = creditService.checkCreditCardCount();
+			if (check) {
+				return new ModelAndView("applyNewCreditCardPage");
+			} else {
+				output = "You already have one active credit card";
+				return new ModelAndView("outputCreditPage", "output", output);
+
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+
+	}
+	// @RequestMapping("/insideCreditMenu")
+	// public String showCreditMenu() {
+	// return "cardsMenuPage";
+	// }
+
+	@RequestMapping(value = "/creditlist", method = RequestMethod.GET)
+	public ModelAndView list() {
+		List<CreditCardBean> creditCardBeans;
+		try {
+			creditCardBeans = creditService.viewAllCreditCards();
+		} catch (IBSException e) {
+			String message = e.getMessage();
+			return new ModelAndView("errorPage", "errorMessage", message);
+		}
+		return new ModelAndView("listCreditCards", "output", creditCardBeans);
+	}
+
+	@RequestMapping(value = "/applynew", method = RequestMethod.POST)
+	public ModelAndView applyNewCreditCard2(@RequestParam("UCI") BigInteger uci, @RequestParam("type") String type) {
+		String output = "";
+		try {
+			String num = creditService.applyNewCreditCard(type, uci);
+			output = "Ticket Raised successfully. Your reference Id is" + num;
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+
+	}
+
+	@RequestMapping(value = "/block", method = RequestMethod.GET)
+	public ModelAndView block() {
+		String output = "";
+		try {
+			if (!creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Blocked")) {
+				return new ModelAndView("activateCardPage");
+			} else {
+				output = "Your card is already blocked.";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/block", method = RequestMethod.POST)
+	public ModelAndView block(@RequestParam("pin") String pin) {
+		String output = "";
+		creditCard = this.cardNumber;
+
+		try {
+
+			if (creditVerify.verifyCreditPin(pin, creditCard)) {
+				creditService.requestCreditCardLost(creditCard);
+				output = " Your card has been Blocked. Contact branch for further process!";
+			} else {
+				output = "Card number and pin don't match!! Try again!";
+			}
+			return new ModelAndView("outputPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/activate", method = RequestMethod.GET)
+	public ModelAndView activate() {
+		String output = "";
+		try {
+			if (creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Inactive")) {
+				return new ModelAndView("activateCardPage");
+			}
+
+			else {
+				output = "OOPS!! This card is either Blocked or already active and can not be activated";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/activate", method = RequestMethod.POST)
+	public ModelAndView activate(@RequestParam("pin") String pin) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+
+			if (creditVerify.verifyCreditPin(pin, creditCard)) {
+				creditService.activateCreditCard(creditCard);
+				output = "Card successfully activated!";
+			} else {
+				output = "Incorrect Pin entered";
+			}
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/deactivate", method = RequestMethod.GET)
+	public ModelAndView deactivate() {
+		String output = "";
+		try {
+			if (creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Active")) {
+				return new ModelAndView("deactivateCardPage");
+			}
+
+			else {
+				output = "OOPS!! This card is either blocked or is Inactive and can't be deactivated ";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/deactivate", method = RequestMethod.POST)
+	public ModelAndView deactivate(@RequestParam("pin") String pin) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+
+			if (creditVerify.verifyCreditPin(pin, creditCard)) {
+
+				creditService.deactivateCreditCard(creditCard);
+				output = "Card successfully deactivated!";
+			} else {
+				output = "Incorrect Pin entered";
+			}
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/reset", method = RequestMethod.GET)
+	public ModelAndView resetPin() {
+		String output = "";
+		try {
+			if (!creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Blocked")
+					&& !creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Inactive")) {
+				return new ModelAndView("resetCreditPinPage");
+			}
+
+			else {
+				output = "You can not change pin of a blocked/inactive card";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/reset", method = RequestMethod.POST)
+	public ModelAndView resetPin(@RequestParam("pin") String pin) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+
+			if (creditVerify.verifyCreditPin(pin, creditCard)) {
+				return new ModelAndView("NewDebitPinPage");
+			} else {
+				output = "Incorrect Pin entered";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/resetpin", method = RequestMethod.POST)
+	public ModelAndView resetPin2(@RequestParam("newpin") String newpin, @RequestParam("newpin2") String newpin2) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+			if (newpin2.equals(newpin)) {
+				creditService.resetCreditPin(creditCard, newpin);
+				output = "PIN SUCCESSFULLY CHANGED";
+			} else {
+				output = "PINS DO NOT MATCH...TRY AGAIN";
+			}
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/upgrade", method = RequestMethod.GET)
+	public ModelAndView upgradeCreditCard() {
+		String output = "";
+		String type = null;
+		creditCard = this.cardNumber;
+		try {
+			if (!creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Blocked")
+					&& !creditService.getCreditcardStatus(creditCard).equalsIgnoreCase("Inactive")) {
+				type = creditService.getCreditcardType(creditCard);
+				if (type.equalsIgnoreCase("Silver")) {
+					return new ModelAndView("upgradeCreditSilver");
+				} else if (type.equalsIgnoreCase("Gold")) {
+					return new ModelAndView("upgradeCreditGold");
+				} else {
+					output = "You already have a Platinum card.Can not upgrade further";
+					return new ModelAndView("outputCreditPage", "output", output);
+				}
+			} else {
+				output = "You can not upgrade a blocked/inactive card";
+				return new ModelAndView("outputCreditPage", "output", output);
+			}
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+
+	}
+
+	@RequestMapping(value = "/upgradeTwo", method = RequestMethod.POST)
+	public ModelAndView upgradeFromSilver(@RequestParam("type") String type, @RequestParam("remarks") String remarks) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+			String num = creditService.requestCreditCardUpgrade(creditCard, type, remarks);
+			output = "Ticket Raised successfully. Your reference Id is" + num;
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/upgradePlat", method = RequestMethod.POST)
+	public ModelAndView upgradeFromGold(@RequestParam("type") String type, @RequestParam("remarks") String remarks) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+			String num = creditService.requestCreditCardUpgrade(creditCard, type, remarks);
+			output = "Ticket Raised successfully. Your reference Id is" + num;
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/requestStat", method = RequestMethod.GET)
+	public String requestCardStatement() {
+		return "statementCreditPage";
+	}
+
+	@RequestMapping(value = "/requestStat", method = RequestMethod.POST)
+	public ModelAndView requestStatement(String fromdate, String enddate) {
+		creditCard = this.cardNumber;
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+
+		try {
+			if (creditService.getCreditTransactions(creditCard)) {
+				LocalDate startDate1 = LocalDate.parse(fromdate, formatter);
+				LocalDate endDate1 = LocalDate.parse(enddate, formatter);
+				trans = creditService.getCreditTrans(startDate1, endDate1, creditCard);
+			}
+
+			ModelAndView mv = new ModelAndView("listCreditTransaction", "output", trans);
+			mv.addObject("dtF", dtFormat);
+			return mv;
+
+		} catch (IBSException e) {
+			String output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+
+	@RequestMapping(value = "/mismatchCredit")
+	public ModelAndView creditMismatch(@RequestParam("creditCard") BigInteger transactionId,
+			@RequestParam("remarks") String remarks) {
+		String output = "";
+		creditCard = this.cardNumber;
+		try {
+			String refId = creditService.raiseCreditMismatchTicket(transactionId, remarks);
+			output = " Ticket raised successfully. your reference ID is " + refId;
+			return new ModelAndView("outputCreditPage", "output", output);
+		} catch (IBSException e) {
+			output = e.getMessage();
+			return new ModelAndView("errorPage", "output", output);
+		}
+	}
+}
